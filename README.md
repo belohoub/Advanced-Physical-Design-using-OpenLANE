@@ -1,6 +1,36 @@
 # Advanced Physical Design using OpenLANE/Sky130 Workshop Notes
   * efabless-sponsored [VSD-IAT workshop (2022-08-03 to 2022-08-07)](https://www.vlsisystemdesign.com/advanced-physical-design-using-openlane-sky130/)
 
+  
+## Table Of Contents
+  
+  * [Toolchain installation](#toolchain-installation)
+  * [Workshop Day 1](#workshop-day-1)
+    + [The OpenLane-driven Design Flow](#the-openlane-driven-design-flow)
+    + [Synthesis in OpenLane](#synthesis-in-openlane)
+  * [Workshop Day 2](#workshop-day-2)
+    + [Floorplaning](#floorplaning)
+      - [Pin placement and logical cell placement blockage](#pin-placement-and-logical-cell-placement-blockage)
+    + [Floorplan in OpenLane](#floorplan-in-openlane)
+    + [Placement in OpenLane](#placement-in-openlane)
+    + [Cell Characterization](#cell-characterization)
+  * [Workshop Day 3](#workshop-day-3)
+    + [Inverter ngSPICE Simulations](#inverter-ngspice-simulations)
+    + [CMOS Fabrication Process](#cmos-fabrication-process)
+    + [Tech File Labs](#tech-file-labs)
+  * [Workshop Day 4](#workshop-day-4)
+    + [Standard Cell Layout to LEF](#standard-cell-layout-to-lef)
+    + [Timing Settings for Synthesys](#timing-settings-for-synthesys)
+    + [Post-Synthesys Timing Analysis - Custom Execution](#post-synthesys-timing-analysis---custom-execution)
+    + [Clock Tree Synthesis](#clock-tree-synthesis)
+    + [Timing analysis inside OpenLANE](#timing-analysis-inside-openlane)
+  * [Workshop Day 5](#workshop-day-5)
+    + [Power Distribution Network](#power-distribution-network)
+    + [Global and Detail Routing](#global-and-detail-routing)
+    + [Standard Parasitic Exchange Format (SPEF) File](#standard-parasitic-exchange-format-spef-file)
+  * [References](#references)
+  * [Credits](#credits)
+  
 ## Toolchain installation
 
   * Prior the workshop, I already have an experience with qflow
@@ -302,10 +332,14 @@ $ /usr/local/bin/magic -T ../../../../pdks/sky130A/libs.tech/magic/sky130A.tech 
 ```tcl
 % echo $::env(CURRENT_DEF)
 /openlane/designs/aes128/runs/RUN_2022.08.04_08.32.49/tmp/floorplan/31-pdn.def
-% set ::env(PL_RESIZER_DESIGN_OPTIMIZATIONS) 0
-0
-% set ::env(ROUTING_OPT_ITERS) 0
-0
+% set ::env(CURRENT_DEF) /openlane/designs/aes128/runs/RUN_2022.08.04_08.32.49/tmp/floorplan/31-pdn.def
+/openlane/designs/aes128/runs/RUN_2022.08.04_08.32.49/tmp/floorplan/31-pdn.def
+% set ::env(PL_RESIZER_DESIGN_OPTIMIZATIONS) 1
+1
+% set ::env(ROUTING_OPT_ITERS) 128
+128
+% set ::env(DETAILED_ROUTER) tritonroute
+drcu
 % run_routing
 ```
 
@@ -318,6 +352,8 @@ $ cd <SPEF_EXTRACTOR_path>
 $ python3 main.py <lef_file> <def_file>
 ```
 
+  * in the new version of the flow, the extractor is already included and it is automatically invoked at the end of the routing stage
+
 
 ## References
 
@@ -328,3 +364,4 @@ $ python3 main.py <lef_file> <def_file>
   * [VLSI System Design](https://www.vlsisystemdesign.com/)
   * [efabless](https://efabless.com/)
   * [opencircuitdesign.com](http://opencircuitdesign.com/qflow/)
+  * [OpenLane](https://github.com/efabless/OpenLane)
