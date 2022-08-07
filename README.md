@@ -322,9 +322,9 @@ openroad> report_checks -path_delay min_max -format full_clock_expanded -digits 
 $ /usr/local/bin/magic -T ../../../../pdks/sky130A/libs.tech/magic/sky130A.tech lef read tmp/merged.lef def read tmp/floorplan/31-pdn.def
 ```
 
-![Floorplan in Magic](/img/day5_pdn.png)
+![PDN](/img/day5_pdn.png)
 
-![Floorplan in Magic](/img/day5_pdn_detail.png)
+![PDN detail](/img/day5_pdn_detail.png)
 
 
 ### Global and Detail Routing
@@ -339,7 +339,7 @@ $ /usr/local/bin/magic -T ../../../../pdks/sky130A/libs.tech/magic/sky130A.tech 
 % set ::env(ROUTING_OPT_ITERS) 128
 128
 % set ::env(DETAILED_ROUTER) tritonroute
-drcu
+tritonroute
 % run_routing
 ```
 
@@ -364,4 +364,3 @@ $ python3 main.py <lef_file> <def_file>
   * [VLSI System Design](https://www.vlsisystemdesign.com/)
   * [efabless](https://efabless.com/)
   * [opencircuitdesign.com](http://opencircuitdesign.com/qflow/)
-  * [OpenLane](https://github.com/efabless/OpenLane)
