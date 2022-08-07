@@ -150,9 +150,173 @@ $ magic -T ${PROJ_WORK}/tmp/openLane/pdks/sky130A/libs.tech/magic/sky130A.tech l
 
 ## Workshop Day 3
 
+  * as I've [experience](https://github.com/DDD-FIT-CTU/CMOS-PLS/tree/master_github/resistantGates) with this part of workshop, I mostly reviewed the theory provided by EDU videos.
+
 ### Inverter ngSPICE Simulations
 
-  * as I've [experience](https://github.com/DDD-FIT-CTU/CMOS-PLS/tree/master_github/resistantGates) with this part of workshop, I just reviewed the theory provided by EDU videos.
+
+### CMOS Fabrication Process
+
+  * mostly covered by the equal [Udemy curse](VSD - Custom Layout) I already had
+  * [Standard cell design and characterization using openlane flow by nickson-jose](https://github.com/nickson-jose/vsdstdcelldesign)
+  
+### Tech File Labs
+  
+  * Magic switch the set of DRC rules
+  
+```tcl
+% drc style drc(fast)
+% drc style drc(full)
+% drc check
+```
+
+## Workshop Day 4
+
+### Standard Cell Layout to LEF
+
+  * the cell height must comply with power grid
+  * the cell width should be an odd multiple of the minimum grid
+  * the cell port must be at the intersection of the grid lines
+
+  * grid parameteres from the pdks/sky130A/libs.tech/openlane/sky130_fd_sc_hd/tracks.info file:
+
+```
+li1 X 0.23 0.46
+li1 Y 0.17 0.34
+met1 X 0.17 0.34
+met1 Y 0.17 0.34
+met2 X 0.23 0.46
+met2 Y 0.23 0.46
+met3 X 0.34 0.68
+met3 Y 0.34 0.68
+met4 X 0.46 0.92
+met4 Y 0.46 0.92
+met5 X 1.70 3.40
+met5 Y 1.70 3.40
+```
+
+  <layer-name> <X-or-Y> <track-offset> <track-pitch>
+  
+  * synthesis/mapping library example: pdks/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+
+### Timing Settings for Synthesys
+
+  * The following env. variables could be tuned:
+  
+```
+SYNTH_STRATEGY
+SYNTH_BUFFERING
+SYNTH_SIZING
+```
+
+### Post-Synthesys Timing Analysis - Custom Execution
+
+  * /scripts/base.sdc file is the sdc template
+  * pre_synth.conf config file example:
+  
+```
+set cmd_units -time ns -capacitance pF -current mA -voltage V -resistance kOhm -distance um
+read liberty -max PATH_TO/sky130_fd_sc_slow.lib
+read liberty -min PATH_TO/sky130_fd_sc_fast.lib
+read verilog ${PROJ_WORK}/tmp/openLane/designs/aes128/runs/RUN_2022.08.04_07.33.37/results/synthesis/aes128.v
+link design aes128
+read sdc path_to_my_updated_base.sdc
+report checks -path_delay min_max -fields {slew trans net cap input_pin}
+report_tns
+report_wns
+```
+
+  * run OpenSTA:
+  
+```bash
+$ sta pre_synth.conf
+```
+  * replace "bad" cell manually:
+
+```tcl
+% # This is OpenSTA command line
+% replace cell <cell_num> <new_cell_name>
+% report_checks -from <node> -to <node> -through <node>
+% report_tns
+% report_wns
+% report_checks -fields {net cap slew input_pin}
+% write_verilog <netlist>
+```
+  * now let's return to OpenLane and continue with P&R
+
+### Clock Tree Synthesis
+
+  * in OpenLane:
+```tcl
+% run_cts
+```
+
+  * CTS results were written to openlane/designs/aes128/runs/RUN_2022.08.04_08.32.49/results/cts/aes128.v
+
+  
+### Timing analysis inside OpenLANE
+
+  * first create database for OpenRoad: 
+  
+```tcl
+% openroad
+...
+openroad> read_lef <lef_file>
+openroad> read_def <def_file>
+openroad> write_db <db_file>
+...
+openroad> exit
+...
+openroad> read_db  <db_file>
+openroad> read_verilog <synthetized_verilog>
+openroad> read_liberty -max $::env(LIB_MAX)
+openroad> read_liberty -min $::env(LIB_MIN)
+openroad> read_sdc <sdc_file>
+openroad> set_propagated_clock [all_clocks]
+openroad> report_checks -path_delay min_max -format full_clock_expanded -digits 4
+```
+
+## Workshop Day 5
+
+### Power Distribution Network
+
+```tcl
+% gen_pdn
+...
+[INFO]: PDN generation was successful.
+[INFO]: Changing layout from /openlane/designs/aes128/runs/RUN_2022.08.04_08.32.49/results/cts/aes128.def to /openlane/designs/aes128/runs/RUN_2022.08.04_08.32.49/tmp/floorplan/31-pdn.def
+% 
+```
+
+```bash
+$ /usr/local/bin/magic -T ../../../../pdks/sky130A/libs.tech/magic/sky130A.tech lef read tmp/merged.lef def read tmp/floorplan/31-pdn.def
+```
+
+![Floorplan in Magic](/img/day5_pdn.png)
+
+![Floorplan in Magic](/img/day5_pdn_detail.png)
+
+
+### Global and Detail Routing
+
+```tcl
+% echo $::env(CURRENT_DEF)
+/openlane/designs/aes128/runs/RUN_2022.08.04_08.32.49/tmp/floorplan/31-pdn.def
+% set ::env(PL_RESIZER_DESIGN_OPTIMIZATIONS) 0
+0
+% set ::env(ROUTING_OPT_ITERS) 0
+0
+% run_routing
+```
+
+### Standard Parasitic Exchange Format (SPEF) File
+
+  * SPEF file generation by using the [SPEF_EXTRACTOR](https://github.com/HanyMoussa/SPEF_EXTRACTOR)
+
+  ```bash
+$ cd <SPEF_EXTRACTOR_path>
+$ python3 main.py <lef_file> <def_file>
+```
 
 
 ## References
